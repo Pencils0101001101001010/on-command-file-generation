@@ -2,7 +2,11 @@ const fs = require("fs/promises");
 
 (async () => {
   //commands
-  const CREATE_FILE = "create a file";
+  const CREATE_FILE = "create file";
+  const DELETE_FILE = "delete file";
+  const RENAME_FILE = "rename the file";
+  const ADD_TO_FILE = "add to the file";
+
   const createFile = async (path) => {
     try {
       //* open file to see if it exists, if it doesn't exist it will throw an error and we will create the file in the catch block
@@ -15,6 +19,58 @@ const fs = require("fs/promises");
       const createFileHandler = await fs.open(path, "w"); //* "w" flag will create the file if it doesn't exist and open it for writing
       createFileHandler.close();
       console.log("File created successfully");
+    }
+  };
+
+  const deleteFile = async (path) => {
+    //* delete the file at the given path
+    try {
+      await fs.unlink(path);
+      console.log(`File:${path} was deleted.`);
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        console.log("No file at this path.");
+      } else {
+        console.log("An error has occured:");
+        console.log(error.message);
+      }
+    }
+  };
+
+  const renameFile = async (oldFilePath, newFilePath) => {
+    //* rename the file at oldPath to newPath
+    try {
+      await fs.rename(oldFilePath, newFilePath);
+      console.log(`File ${oldFilePath} renamed to ${newFilePath} successfully`);
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        console.log(
+          "No file at this path to rename, or destination doesn't exist.",
+        );
+      } else {
+        console.log("An error has occured:");
+        console.log(error.message);
+      }
+    }
+  };
+
+  let addedContent;
+
+  const addToFile = async (path, content) => {
+    if (addedContent === content) return;
+    //* add the content to the file at the given path
+    try {
+      const fileHandler = await fs.open(path, "a"); //* "a" flag will open the file for appending, if the file doesn't exist it will create it */
+
+      //   await fileHandler.appendFile(content); does the shame.
+      await fileHandler.write(content);
+      addedContent = content;
+
+      fileHandler.close();
+
+      console.log(`Content: "${content}" added to file ${path} successfully`);
+    } catch (error) {
+      console.error("There was an error adding to file.", error.message);
     }
   };
 
@@ -36,13 +92,39 @@ const fs = require("fs/promises");
     await commandFileHandler.read(buf, offset, length, position);
 
     //*
-    const command = buf.toString("utf-8");
+    const command = buf.toString("utf-8").trim();
 
     //*create a file:
     //*create a file <path>
     if (command.includes(CREATE_FILE)) {
       const filePath = command.substring(CREATE_FILE.length + 1);
       createFile(filePath);
+    }
+
+    //* delete a file:
+    //* delete a file <path>
+    if (command.includes(DELETE_FILE)) {
+      const filePath = command.substring(DELETE_FILE.length + 1);
+      deleteFile(filePath);
+    }
+
+    //* rename a file:
+    //* rename the file <oldPath> to <newPath>
+
+    if (command.includes(RENAME_FILE)) {
+      const _index = command.indexOf(" to ");
+      const oldFilePath = command.substring(RENAME_FILE.length + 1, _index);
+      const newFilePath = command.substring(_index + 4);
+      renameFile(oldFilePath, newFilePath);
+    }
+
+    //* add to file:
+    //* add to file <path> this content: <content>
+    if (command.includes(ADD_TO_FILE)) {
+      const _index = command.indexOf(" this content: ");
+      const filePath = command.substring(ADD_TO_FILE.length + 1, _index);
+      const content = command.substring(_index + 15);
+      addToFile(filePath, content);
     }
   });
 

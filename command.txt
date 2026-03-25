@@ -1,1 +1,1 @@
-create a file /home/sj/test/hello.txt
+add to the file dir/ToDo.txt this content: 
