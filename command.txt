@@ -1,1 +1,1 @@
-add to the file dir/ToDo.txt this content: 
+ show the file ToDo.txt

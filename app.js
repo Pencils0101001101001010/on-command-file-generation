@@ -2,10 +2,24 @@ const fs = require("fs/promises");
 
 (async () => {
   //commands
+  const READ_FILE = "show the file";
   const CREATE_FILE = "create file";
   const DELETE_FILE = "delete file";
   const RENAME_FILE = "rename the file";
   const ADD_TO_FILE = "add to the file";
+
+  const readFile = async (path) => {
+    try {
+      const fileHandler = await fs.open(path, "r");
+      const fileContent = await fileHandler.readFile({ encoding: "utf8" });
+
+      fileHandler.close();
+      console.log("File Content: \n");
+      console.log(fileContent);
+    } catch (error) {
+      console.log("Error occured: ", error.message);
+    }
+  };
 
   const createFile = async (path) => {
     try {
@@ -94,6 +108,13 @@ const fs = require("fs/promises");
     //*
     const command = buf.toString("utf-8").trim();
 
+    //* read file:
+    //* show the file <path>
+    if (command.includes(READ_FILE)) {
+      let filePath = command.substring(READ_FILE.length + 1);
+      readFile(filePath);
+    }
+
     //*create a file:
     //*create a file <path>
     if (command.includes(CREATE_FILE)) {
@@ -128,7 +149,9 @@ const fs = require("fs/promises");
     }
   });
 
-  const watcher = fs.watch("./command.txt");
+  const filePath = "./command.txt";
+
+  const watcher = fs.watch(filePath);
 
   for await (const event of watcher) {
     if (event.eventType === "change") {
